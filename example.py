@@ -1,10 +1,6 @@
 # -*- coding: utf-8 -*-
 from paddingoracle import BadPaddingException, PaddingOracle
-from base64 import b64encode, b64decode
-from urllib import quote, unquote
 import requests
-import socket
-import time
 
 
 class PadBuster(PaddingOracle):
@@ -13,11 +9,10 @@ class PadBuster(PaddingOracle):
         # Initializing stuff here
 
     def oracle(self, data, **kwargs):
-        somecookie = data.hex()
-        response = requests.get("http://my.host/test")
-        if response.ok:
-            return
-        raise BadPaddingException
+        cookies = {'val':  data.hex()}
+        response = requests.get("http://my.host/test", cookies=cookies)
+        if not response.ok:
+            raise BadPaddingException
 
 
 if __name__ == '__main__':
