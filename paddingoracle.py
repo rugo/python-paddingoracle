@@ -3,7 +3,7 @@
 Padding Oracle Exploit API
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 '''
-from itertools import izip, cycle
+from itertools import cycle
 import logging
 
 __all__ = [
@@ -41,7 +41,7 @@ class PaddingOracle(object):
     def oracle(self, data, **kwargs):
         '''
         Feeds *data* to a decryption function that reveals a Padding
-        Oracle. If a Padding Oracle was revealed, this method
+       Oracle. If a Padding Oracle was revealed, this method
         should raise a :exc:`.BadPaddingException`, otherwise this
         method should just return.
 
@@ -174,7 +174,7 @@ class PaddingOracle(object):
             # Work on one byte at a time, starting with the last byte
             # and moving backwards
 
-            for byte_num in reversed(xrange(block_size)):
+            for byte_num in reversed(range(block_size)):
 
                 # clear oracle history for each byte
 
@@ -190,7 +190,7 @@ class PaddingOracle(object):
                 if byte_num == block_size - 1 and last_ok > 0:
                     r = last_ok
 
-                for i in reversed(xrange(r)):
+                for i in reversed(range(r)):
 
                     # Fuzz the test byte
 
@@ -233,7 +233,7 @@ class PaddingOracle(object):
 
                     intermediate_bytes[byte_num] = decrypted_byte
 
-                    for k in xrange(byte_num, block_size):
+                    for k in range(byte_num, block_size):
 
                         # XOR the current test byte with the padding value
                         # for this round to recover the decrypted byte
@@ -267,80 +267,6 @@ def xor(data, key):
     '''
     XOR two bytearray objects with each other.
     '''
-    return bytearray([x ^ y for x, y in izip(data, cycle(key))])
+    return bytearray([x ^ y for x, y in zip(data, cycle(key))])
 
 
-def test():
-    import os
-    from Crypto.Cipher import AES
-
-    teststring = 'The quick brown fox jumped over the lazy dog'
-
-    def pkcs7_pad(data, blklen=16):
-        if blklen > 255:
-            raise ValueError('Illegal block size %d' % (blklen, ))
-        pad = (blklen - (len(data) % blklen))
-        return data + chr(pad) * pad
-
-    class PadBuster(PaddingOracle):
-        def oracle(self, data):
-            _cipher = AES.new(key, AES.MODE_CBC, str(iv))
-            ptext = _cipher.decrypt(str(data))
-            plen = ord(ptext[-1])
-
-            padding_is_good = (ptext[-plen:] == chr(plen) * plen)
-
-            if padding_is_good:
-                return
-
-            raise BadPaddingException
-
-    padbuster = PadBuster()
-
-    for _ in xrange(100):
-        key = os.urandom(AES.block_size)
-        iv = bytearray(os.urandom(AES.block_size))
-
-        print "Testing padding oracle exploit in DECRYPT mode"
-        cipher = AES.new(key, AES.MODE_CBC, str(iv))
-
-        data = pkcs7_pad(teststring, blklen=AES.block_size)
-        ctext = cipher.encrypt(data)
-
-        print "Key:        %r" % (key, )
-        print "IV:         %r" % (iv, )
-        print "Plaintext:  %r" % (data, )
-        print "Ciphertext: %r" % (ctext, )
-
-        decrypted = padbuster.decrypt(ctext, block_size=AES.block_size, iv=iv)
-
-        print "Decrypted:  %r" % (str(decrypted), )
-        print "\nRecovered in %d attempts\n" % (padbuster.attempts, )
-
-        assert decrypted == data, \
-            'Decrypted data %r does not match original %r' % (
-                decrypted, data)
-
-        print "Testing padding oracle exploit in ENCRYPT mode"
-        cipher2 = AES.new(key, AES.MODE_CBC, str(iv))
-
-        encrypted = padbuster.encrypt(teststring, block_size=AES.block_size)
-
-        print "Key:        %r" % (key, )
-        print "IV:         %r" % (iv, )
-        print "Plaintext:  %r" % (teststring, )
-        print "Ciphertext: %r" % (str(encrypted), )
-
-        decrypted = cipher2.decrypt(str(encrypted))[AES.block_size:]
-        decrypted = decrypted.rstrip(decrypted[-1])
-
-        print "Decrypted:  %r" % (str(decrypted), )
-        print "\nRecovered in %d attempts" % (padbuster.attempts, )
-
-        assert decrypted == teststring, \
-            'Encrypted data %r does not decrypt to %r, got %r' % (
-                encrypted, teststring, decrypted)
-
-
-if __name__ == '__main__':
-    test()
