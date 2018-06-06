@@ -6,8 +6,7 @@ alternative to `PadBuster`_ and other padding oracle exploit tools that can't
 easily (without a heavy rewrite) be used in unique, per-app scenarios. Think
 non-HTTP applications, raw sockets, client applications, unique encodings, etc.
 
-Usage:
-------
+## Usage:
 
 To use the paddingoracle API, simply implement the **oracle()** method from the
 PaddingOracle API and raise a **BadPaddingException** when the decrypter
@@ -16,9 +15,8 @@ reveals a padding oracle. To decrypt data, pass raw encrypted bytes to
 
 See `example.py` for an example. 
 
--------
-python-paddingoracle is a Python implementation heavily based on `PadBuster`_,
+python-paddingoracle is a Python implementation heavily based on `PadBuster`,
 an automated script for performing Padding Oracle attacks, developed by
 Brian Holyfield of Gotham Digital Science.
 
-.. _`PadBuster`: https://github.com/GDSSecurity/PadBuster
+`PadBuster`: https://github.com/GDSSecurity/PadBuster
