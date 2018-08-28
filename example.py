@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from paddingoracle import BadPaddingException, PaddingOracle
 import requests
+from sys import argv
 
 
 class PadBuster(PaddingOracle):
@@ -21,4 +22,4 @@ if __name__ == '__main__':
     padbuster = PadBuster()
     cookie = padbuster.decrypt(encrypted_cookie, block_size=16)
 
-    print('Decrypted cookie: %s => %s' % (sys.argv[1], cookie))
+    print('Decrypted cookie: %s => %s' % (argv[1], cookie))
